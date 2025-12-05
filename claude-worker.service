@@ -1,0 +1,17 @@
+[Unit]
+Description=Claude Task Queue Worker
+After=network.target
+
+[Service]
+Type=oneshot
+User=tlarcombe
+WorkingDirectory=/home/tlarcombe
+ExecStart=/usr/bin/python3 /home/tlarcombe/claude_worker.py --once
+StandardOutput=journal
+StandardError=journal
+
+# Prevent running if no tasks available (worker will exit quickly)
+# This keeps the logs clean and avoids unnecessary token usage
+
+[Install]
+WantedBy=multi-user.target

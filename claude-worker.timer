@@ -1,0 +1,14 @@
+[Unit]
+Description=Claude Task Queue Worker Timer
+Requires=claude-worker.service
+
+[Timer]
+# Run every 2 minutes
+OnBootSec=1min
+OnUnitActiveSec=2min
+
+# Don't accumulate missed runs if system was off
+Persistent=false
+
+[Install]
+WantedBy=timers.target

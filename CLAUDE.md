@@ -96,3 +96,72 @@ For simple one-off commands:
 ```bash
 ssh pi-node-1 "/home/user/.local/bin/claude --dangerously-skip-permissions 'task'" > output.txt
 ```
+
+## Lessons Learned During Development
+
+### Technical Insights
+
+**Multi-Agent Coordination**
+- Multiple Claude instances can effectively work together through a simple shared filesystem queue
+- No complex networking or APIs needed - just files, locks, and atomic operations
+- This pattern scales well to many nodes
+
+**The `--dangerously-skip-permissions` Flag**
+- Essential for non-interactive remote execution
+- Without it, remote Claude instances block waiting for user approval
+- This is THE key to automation with Claude
+
+**File-Based Coordination**
+- File locking with `fcntl` provides robust synchronization
+- NFS-mounted shared storage is a practical solution
+- Atomic file operations (write to temp, then rename) prevent race conditions
+
+### Security & Privacy
+
+**Git History Matters**
+- Simply sanitizing files and committing creates an audit trail in git diffs
+- Must rewrite history completely (fresh repo + force push) to truly remove sensitive data
+- Git history is just as important as current code content
+
+**Local vs Public Separation**
+- Keep two versions: local with real config, public sanitized
+- Prevents accidental leaks while allowing real development
+- Common pattern for open-source projects with private deployments
+
+**Information Leakage is Pervasive**
+- Personal info appears in: code, examples, test results, status documents, commit messages
+- Must sanitize: hostnames, IPs, usernames, paths, NFS mounts
+- Review ALL files before making public, not just source code
+
+### Architecture Decisions
+
+**Start Simple, Iterate**
+- Direct SSH approach worked well initially
+- Queue system added sophistication when needed
+- Proved concept before adding complexity
+
+**Infrastructure as Code**
+- Installation scripts make deployment repeatable
+- Systemd integration makes it production-ready
+- GitHub as distribution mechanism works well
+
+**Claude-to-Claude Communication Opens Possibilities**
+- Can distribute tasks across hardware with different capabilities
+- Enables swarm intelligence or specialized roles
+- Coordination layer is simpler than expected
+
+### Development Process
+
+**Documentation Needs Care**
+- Easy to leak information in examples and test outputs
+- Status files and reports often contain real data
+- Must sanitize documentation as thoroughly as code
+
+**Testing Reveals Usage Patterns**
+- Running actual tests exposed permission issues quickly
+- Worker timeout settings needed adjustment for real workloads
+- Error handling became more important with multiple nodes
+
+### Key Takeaway
+
+Multi-agent AI systems are accessible to individuals with simple infrastructure. The tooling doesn't need to be complex - a shared filesystem and file locking are sufficient for coordination. However, security and privacy require proactive attention at every step.
